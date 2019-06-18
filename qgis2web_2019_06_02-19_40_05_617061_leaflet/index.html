@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        #map {
+            width: 844px;
+            height: 540px;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script><script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.wms.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet-search.js"></script>
+        <script src="data/Nucleos_CAT_1.js"></script>
+        <script src="data/Incendios_CAT_2.js"></script>
+        <script src="data/Zonasinundables_CAT_3.js"></script>
+        <script src="data/Gasolineras_CAT_4.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:15, minZoom:7
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>');
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+            map.setMaxBounds(map.getBounds());
+        }
+        var layer_INFLAMABILITAT_V3_0 = L.WMS.layer("http://sig.gencat.cat/ows/VEGETACIO/wms", "INFLAMABILITAT_V3", {
+            format: 'image/png',
+            uppercase: true,
+            transparent: true,
+            continuousWorld : true,
+            tiled: true,
+            info_format: 'text/html',
+            opacity: 1,
+            attribution: '',
+        });
+        function pop_Nucleos_CAT_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CODINE'] !== null ? Autolinker.link(String(feature.properties['CODINE'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">NOMBRE</th>\
+                        <td>' + (feature.properties['NOMBRE'] !== null ? Autolinker.link(String(feature.properties['NOMBRE'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['KM2'] !== null ? Autolinker.link(String(feature.properties['KM2'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">HBT</th>\
+                        <td>' + (feature.properties['HBT'] !== null ? Autolinker.link(String(feature.properties['HBT'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DENSIDAD'] !== null ? Autolinker.link(String(feature.properties['DENSIDAD'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CP'] !== null ? Autolinker.link(String(feature.properties['CP'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROVIN'] !== null ? Autolinker.link(String(feature.properties['PROVIN'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CA'] !== null ? Autolinker.link(String(feature.properties['CA'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['AUTONOM'] !== null ? Autolinker.link(String(feature.properties['AUTONOM'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CU'] !== null ? Autolinker.link(String(feature.properties['CU'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['AU'] !== null ? Autolinker.link(String(feature.properties['AU'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SAU'] !== null ? Autolinker.link(String(feature.properties['SAU'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TMA'] !== null ? Autolinker.link(String(feature.properties['TMA'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['N_CU'] !== null ? Autolinker.link(String(feature.properties['N_CU'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['N_AU'] !== null ? Autolinker.link(String(feature.properties['N_AU'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['N_SAU'] !== null ? Autolinker.link(String(feature.properties['N_SAU'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CAPITAL'] !== null ? Autolinker.link(String(feature.properties['CAPITAL'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FECHA'] !== null ? Autolinker.link(String(feature.properties['FECHA'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SHAPEID'] !== null ? Autolinker.link(String(feature.properties['SHAPEID'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COL_CU'] !== null ? Autolinker.link(String(feature.properties['COL_CU'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COL_AU'] !== null ? Autolinker.link(String(feature.properties['COL_AU'])) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Nucleos_CAT_1_0(feature) {
+            if (feature.properties['HBT'] >= 0.000000 && feature.properties['HBT'] <= 250000.000000 ) {
+                return {
+                pane: 'pane_Nucleos_CAT_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,25,28,1.0)',
+            }
+            }
+            if (feature.properties['HBT'] >= 250000.000000 && feature.properties['HBT'] <= 500000.000000 ) {
+                return {
+                pane: 'pane_Nucleos_CAT_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,174,97,1.0)',
+            }
+            }
+            if (feature.properties['HBT'] >= 500000.000000 && feature.properties['HBT'] <= 1000000.000000 ) {
+                return {
+                pane: 'pane_Nucleos_CAT_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,191,1.0)',
+            }
+            }
+            if (feature.properties['HBT'] >= 1000000.000000 && feature.properties['HBT'] <= 1250000.000000 ) {
+                return {
+                pane: 'pane_Nucleos_CAT_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(171,221,164,1.0)',
+            }
+            }
+            if (feature.properties['HBT'] >= 1250000.000000 && feature.properties['HBT'] <= 1621537.000000 ) {
+                return {
+                pane: 'pane_Nucleos_CAT_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(43,131,186,1.0)',
+            }
+            }
+        }
+        map.createPane('pane_Nucleos_CAT_1');
+        map.getPane('pane_Nucleos_CAT_1').style.zIndex = 401;
+        map.getPane('pane_Nucleos_CAT_1').style['mix-blend-mode'] = 'normal';
+        var layer_Nucleos_CAT_1 = new L.geoJson(json_Nucleos_CAT_1, {
+            attribution: '',
+            pane: 'pane_Nucleos_CAT_1',
+            onEachFeature: pop_Nucleos_CAT_1,
+            style: style_Nucleos_CAT_1_0,
+        });
+        bounds_group.addLayer(layer_Nucleos_CAT_1);
+        map.addLayer(layer_Nucleos_CAT_1);
+        function pop_Incendios_CAT_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['GRID_CODE'] !== null ? Autolinker.link(String(feature.properties['GRID_CODE'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CODI_FINAL'] !== null ? Autolinker.link(String(feature.properties['CODI_FINAL'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">MUNICIPI</th>\
+                        <td>' + (feature.properties['MUNICIPI'] !== null ? Autolinker.link(String(feature.properties['MUNICIPI'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DATA_INCEN</th>\
+                        <td>' + (feature.properties['DATA_INCEN'] !== null ? Autolinker.link(String(feature.properties['DATA_INCEN'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? Autolinker.link(String(feature.properties['OBJECTID'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['layer'] !== null ? Autolinker.link(String(feature.properties['layer'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['path'] !== null ? Autolinker.link(String(feature.properties['path'])) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Incendios_CAT_2_0(feature) {
+            switch(String(feature.properties['layer'])) {
+                case 'incendis1986':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,245,240,1.0)',
+            }
+                    break;
+                case 'incendis1987':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,240,233,1.0)',
+            }
+                    break;
+                case 'incendis1988':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,235,226,1.0)',
+            }
+                    break;
+                case 'incendis1989':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,230,219,1.0)',
+            }
+                    break;
+                case 'incendis1990':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,225,211,1.0)',
+            }
+                    break;
+                case 'incendis1991':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,217,200,1.0)',
+            }
+                    break;
+                case 'incendis1992':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,208,189,1.0)',
+            }
+                    break;
+                case 'incendis1993':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,199,177,1.0)',
+            }
+                    break;
+                case 'incendis1994':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,190,165,1.0)',
+            }
+                    break;
+                case 'incendis1995':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,181,153,1.0)',
+            }
+                    break;
+                case 'incendis1996':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,171,142,1.0)',
+            }
+                    break;
+                case 'incendis1997':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,161,131,1.0)',
+            }
+                    break;
+                case 'incendis1998':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,151,119,1.0)',
+            }
+                    break;
+                case 'incendis1999':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,141,109,1.0)',
+            }
+                    break;
+                case 'incendis2000':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,131,99,1.0)',
+            }
+                    break;
+                case 'incendis2001':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,122,90,1.0)',
+            }
+                    break;
+                case 'incendis2002':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,112,80,1.0)',
+            }
+                    break;
+                case 'incendis2003':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(250,102,71,1.0)',
+            }
+                    break;
+                case 'incendis2004':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(248,90,64,1.0)',
+            }
+                    break;
+                case 'incendis2005':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(245,79,57,1.0)',
+            }
+                    break;
+                case 'incendis2006':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(242,68,49,1.0)',
+            }
+                    break;
+                case 'incendis2007':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,57,43,1.0)',
+            }
+                    break;
+                case 'incendis2008':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(229,49,39,1.0)',
+            }
+                    break;
+                case 'incendis2009':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,40,36,1.0)',
+            }
+                    break;
+                case 'incendis10':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(212,32,32,1.0)',
+            }
+                    break;
+                case 'incendis2011':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(203,24,29,1.0)',
+            }
+                    break;
+                case 'incendis2012':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(193,21,26,1.0)',
+            }
+                    break;
+                case 'incendis2013':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(183,19,24,1.0)',
+            }
+                    break;
+                case 'incendis2014':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(173,16,22,1.0)',
+            }
+                    break;
+                case 'incendis2015':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(161,14,20,1.0)',
+            }
+                    break;
+                case 'incendis2016':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(142,9,18,1.0)',
+            }
+                    break;
+                case 'incendis2017':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(122,4,15,1.0)',
+            }
+                    break;
+                case 'incendis2018':
+                    return {
+                pane: 'pane_Incendios_CAT_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(103,0,13,1.0)',
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Incendios_CAT_2');
+        map.getPane('pane_Incendios_CAT_2').style.zIndex = 402;
+        map.getPane('pane_Incendios_CAT_2').style['mix-blend-mode'] = 'normal';
+        var layer_Incendios_CAT_2 = new L.geoJson(json_Incendios_CAT_2, {
+            attribution: '',
+            pane: 'pane_Incendios_CAT_2',
+            onEachFeature: pop_Incendios_CAT_2,
+            style: style_Incendios_CAT_2_0,
+        });
+        bounds_group.addLayer(layer_Incendios_CAT_2);
+        map.addLayer(layer_Incendios_CAT_2);
+        function pop_Zonasinundables_CAT_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID_ZINUN_T'] !== null ? Autolinker.link(String(feature.properties['ID_ZINUN_T'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">NOM_ZINUN</th>\
+                        <td>' + (feature.properties['NOM_ZINUN'] !== null ? Autolinker.link(String(feature.properties['NOM_ZINUN'])) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Zonasinundables_CAT_3_0() {
+            return {
+                pane: 'pane_Zonasinundables_CAT_3',
+                opacity: 1,
+                color: 'rgba(36,233,227,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+            }
+        }
+        map.createPane('pane_Zonasinundables_CAT_3');
+        map.getPane('pane_Zonasinundables_CAT_3').style.zIndex = 403;
+        map.getPane('pane_Zonasinundables_CAT_3').style['mix-blend-mode'] = 'normal';
+        var layer_Zonasinundables_CAT_3 = new L.geoJson(json_Zonasinundables_CAT_3, {
+            attribution: '',
+            pane: 'pane_Zonasinundables_CAT_3',
+            onEachFeature: pop_Zonasinundables_CAT_3,
+            style: style_Zonasinundables_CAT_3_0,
+        });
+        bounds_group.addLayer(layer_Zonasinundables_CAT_3);
+        map.addLayer(layer_Zonasinundables_CAT_3);
+        function pop_Gasolineras_CAT_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID_1'] !== null ? Autolinker.link(String(feature.properties['OBJECTID_1'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['objectid'] !== null ? Autolinker.link(String(feature.properties['objectid'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['provincia'] !== null ? Autolinker.link(String(feature.properties['provincia'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">municipio</th>\
+                        <td>' + (feature.properties['municipio'] !== null ? Autolinker.link(String(feature.properties['municipio'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['localidad'] !== null ? Autolinker.link(String(feature.properties['localidad'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['código_po'] !== null ? Autolinker.link(String(feature.properties['código_po'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dirección'] !== null ? Autolinker.link(String(feature.properties['dirección'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['margen'] !== null ? Autolinker.link(String(feature.properties['margen'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">longitud</th>\
+                        <td>' + (feature.properties['longitud'] !== null ? Autolinker.link(String(feature.properties['longitud'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">latitud</th>\
+                        <td>' + (feature.properties['latitud'] !== null ? Autolinker.link(String(feature.properties['latitud'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_gas'] !== null ? Autolinker.link(String(feature.properties['precio_gas'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_g_1'] !== null ? Autolinker.link(String(feature.properties['precio_g_1'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_g_2'] !== null ? Autolinker.link(String(feature.properties['precio_g_2'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_bio'] !== null ? Autolinker.link(String(feature.properties['precio_bio'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_nue'] !== null ? Autolinker.link(String(feature.properties['precio_nue'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_b_1'] !== null ? Autolinker.link(String(feature.properties['precio_b_1'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['f__éster_'] !== null ? Autolinker.link(String(feature.properties['f__éster_'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['f__bioalco'] !== null ? Autolinker.link(String(feature.properties['f__bioalco'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_g_3'] !== null ? Autolinker.link(String(feature.properties['precio_g_3'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_g_4'] !== null ? Autolinker.link(String(feature.properties['precio_g_4'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_g_5'] !== null ? Autolinker.link(String(feature.properties['precio_g_5'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['precio_g_6'] !== null ? Autolinker.link(String(feature.properties['precio_g_6'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['rótulo'] !== null ? Autolinker.link(String(feature.properties['rótulo'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['tipo_venta'] !== null ? Autolinker.link(String(feature.properties['tipo_venta'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['rem_'] !== null ? Autolinker.link(String(feature.properties['rem_'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['horario'] !== null ? Autolinker.link(String(feature.properties['horario'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['horario00'] !== null ? Autolinker.link(String(feature.properties['horario00'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['z'] !== null ? Autolinker.link(String(feature.properties['z'])) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['fecha'] !== null ? Autolinker.link(String(feature.properties['fecha'])) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Gasolineras_CAT_4_0() {
+            return {
+                pane: 'pane_Gasolineras_CAT_4',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(61,128,53,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(84,176,74,1.0)',
+            }
+        }
+        map.createPane('pane_Gasolineras_CAT_4');
+        map.getPane('pane_Gasolineras_CAT_4').style.zIndex = 404;
+        map.getPane('pane_Gasolineras_CAT_4').style['mix-blend-mode'] = 'normal';
+        var layer_Gasolineras_CAT_4 = new L.geoJson(json_Gasolineras_CAT_4, {
+            attribution: '',
+            pane: 'pane_Gasolineras_CAT_4',
+            onEachFeature: pop_Gasolineras_CAT_4,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Gasolineras_CAT_4_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Gasolineras_CAT_4);
+        map.addLayer(layer_Gasolineras_CAT_4);
+        var layer_CadastralParcel_5 = L.WMS.layer("http://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx", "CP.CadastralParcel", {
+            format: 'image/png',
+            uppercase: true,
+            transparent: true,
+            continuousWorld : true,
+            tiled: true,
+            info_format: 'text/html',
+            opacity: 1,
+            attribution: '',
+        });
+        var baseMaps = {};
+        L.control.layers(baseMaps,{"CadastralParcel": layer_CadastralParcel_5,'<img src="legend/Gasolineras_CAT_4.png" /> Gasolineras_CAT': layer_Gasolineras_CAT_4,'<img src="legend/Zonasinundables_CAT_3.png" /> Zonas inundables_CAT': layer_Zonasinundables_CAT_3,'Incendios_CAT<br /><table><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19860.png" /></td><td>incendios 1986</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19871.png" /></td><td>incendios 1987</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19882.png" /></td><td>incendios 1988</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19893.png" /></td><td>incendios 1989</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19904.png" /></td><td>incendios 1990</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19915.png" /></td><td>incendios 1991</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19926.png" /></td><td>incendios 1992</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19937.png" /></td><td>incendios 1993</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19948.png" /></td><td>incendios 1994</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios19959.png" /></td><td>incendios 1995</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios199610.png" /></td><td>incendios 1996</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios199711.png" /></td><td>incendios 1997</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios199812.png" /></td><td>incendios 1998</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios199913.png" /></td><td>incendios 1999</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200014.png" /></td><td>incendios 2000</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200115.png" /></td><td>incendios 2001</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200216.png" /></td><td>incendios 2002</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200317.png" /></td><td>incendios 2003</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200418.png" /></td><td>incendios 2004</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200519.png" /></td><td>incendios 2005</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200620.png" /></td><td>incendios 2006</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200721.png" /></td><td>incendios 2007</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200822.png" /></td><td>incendios 2008</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios200923.png" /></td><td>incendios 2009</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201024.png" /></td><td>incendios 2010</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201125.png" /></td><td>incendios 2011</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201226.png" /></td><td>incendios 2012</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201327.png" /></td><td>incendios 2013</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201428.png" /></td><td>incendios 2014</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201529.png" /></td><td>incendios 2015</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201630.png" /></td><td>incendios 2016</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201731.png" /></td><td>incendios 2017</td></tr><tr><td style="text-align: center;"><img src="legend/Incendios_CAT_2_incendios201832.png" /></td><td>incendios 2018</td></tr></table>': layer_Incendios_CAT_2,'Nucleos_CAT<br /><table><tr><td style="text-align: center;"><img src="legend/Nucleos_CAT_1_2500000.png" /></td><td>< 250000</td></tr><tr><td style="text-align: center;"><img src="legend/Nucleos_CAT_1_2500005000001.png" /></td><td>250000 - 500000</td></tr><tr><td style="text-align: center;"><img src="legend/Nucleos_CAT_1_50000010000002.png" /></td><td>500000 - 1000000</td></tr><tr><td style="text-align: center;"><img src="legend/Nucleos_CAT_1_100000012500003.png" /></td><td>1000000 - 1250000</td></tr><tr><td style="text-align: center;"><img src="legend/Nucleos_CAT_1_12500004.png" /></td><td>> 1250000</td></tr></table>': layer_Nucleos_CAT_1,"INFLAMABILITAT_V3": layer_INFLAMABILITAT_V3_0,}).addTo(map);
+        setBounds();
+        map.addControl(new L.Control.Search({
+            layer: layer_Nucleos_CAT_1,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'NOMBRE'}));
+        document.getElementsByClassName('search-button')[0].className +=
+         ' fa fa-binoculars';
+		setBounds();
+		map.addControl(new L.Control.Search({
+            layer: layer_Incendios_CAT_2,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'MUNICIPI'}));
+        document.getElementsByClassName('search-button')[1].className +=
+         ' fa fa-binoculars';
+        </script>
+    </body>
+</html>
